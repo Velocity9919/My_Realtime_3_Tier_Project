@@ -4,9 +4,10 @@ metadata:
   name: frontend
   namespace: three-tier
 spec:
+  type: LoadBalancer
   ports:
-  - port: 3000
-    protocol: TCP
-  type: ClusterIP
+  - port: 80
+    targetPort: 3000
+  type: LoadBalancer
   selector:
     role: frontend
