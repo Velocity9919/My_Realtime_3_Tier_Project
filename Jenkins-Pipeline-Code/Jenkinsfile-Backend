@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     tools{
-        jdk 'jdk11'
+        jdk 'jdk17'
         nodejs 'nodejs16'  
     }
 
@@ -25,6 +25,14 @@ pipeline {
             }
         }
 
+        stage('Trivy File Scan') {
+            steps {
+                dir('Application-Code/backend') {
+                    sh 'trivy fs . > trivyfs.txt'
+                }
+            }
+        }
+
         stage('Sonarqube Analysis') {
             steps {
                 dir('Application-Code/backend') {
@@ -41,14 +49,6 @@ pipeline {
             steps {
                 script {
                     waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
-                }
-            }
-        }
-
-        stage('Trivy File Scan') {
-            steps {
-                dir('Application-Code/backend') {
-                    sh 'trivy fs . > trivyfs.txt'
                 }
             }
         }
@@ -78,7 +78,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Deploy to container'){
             steps{
                 sh 'docker run -d --name three-tier-backend -p 5000:5000 nareshbabu1991/three-tier-backend:latest'
