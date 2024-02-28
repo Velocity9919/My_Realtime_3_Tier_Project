@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     tools{
-        jdk 'jdk11'
+        jdk 'jdk17'
         nodejs 'nodejs16'  
     }
 
@@ -21,6 +21,14 @@ pipeline {
             steps {
                 dir('Application-Code/frontend') {
                     sh "npm install"
+                }
+            }
+        }
+
+        stage('Trivy File Scan') {
+            steps {
+                dir('Application-Code/frontend') {
+                    sh 'trivy fs . > trivyfs.txt'
                 }
             }
         }
@@ -45,14 +53,6 @@ pipeline {
             }
         }
 
-        stage('Trivy File Scan') {
-            steps {
-                dir('Application-Code/frontend') {
-                    sh 'trivy fs . > trivyfs.txt'
-                }
-            }
-        }
-
         stage('OWASP Dependency-Check Scan') {
             steps {
                 dir('Application-Code/frontend') {
@@ -67,7 +67,6 @@ pipeline {
                 script {
                     dir('Application-Code/frontend') {
                         withDockerRegistry(credentialsId: 'dockerhub', toolName: 'docker'){
-                        
                             sh 'docker system prune -f'
                             sh 'docker container prune -f'
                             sh 'docker build -t three-tier-frontend .'
@@ -76,12 +75,6 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-        
-        stage('Deploy to container'){
-            steps{
-                sh 'docker run -d --name three-tier-frontend -p 3000:3000 nareshbabu1991/three-tier-frontend:latest'
             }
         }
 
