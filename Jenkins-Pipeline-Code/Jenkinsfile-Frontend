@@ -78,10 +78,29 @@ pipeline {
             }
         }
 
+        stage ('Deploy to container'){
+            steps{
+                sh 'docker run -d --name frontend -p 3000:3000 nareshbabu1991/three-tier-frontend:latest'
+            }
+        }
+
         stage('trivy'){
             steps{
                 script{
                     sh 'trivy image --severity HIGH,CRITICAL nareshbabu1991/three-tier-frontend:latest'
+                }
+            }
+        }
+
+        stage('Deploy to kubernets'){
+            steps{
+                script{
+                    dir('Kubernetes-Manifests-file/frontend'){
+                        withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
+                            sh 'kubectl apply -f deployment.yaml'
+                            sh 'kubectl apply -f service.yaml'
+                        }
+                    }
                 }
             }
         }
